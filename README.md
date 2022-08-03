@@ -3,7 +3,7 @@
   <li> Создать стенд для выполнения домашнего задания
   <li> Настройка стенда
   <li> Бэкап
-  <li> 
+  <li> Настройка автоматизации
 </ol>  
 
 # 1. Создать стенд для выполнения домашнего задания
@@ -48,3 +48,33 @@
 <p> Достал файл из бекапа
 <p> borg extract borg@192.168.56.120:/var/backup/::etc-2022-08-03_22:28:53 etc/hostname
 </ul>
+
+# 4. Настройка автоматизации
+<ul>
+<p> Автоматизируем создание бэкапов
+<p> /etc/systemd/system/borg-backup.service
+<p> [Unit]
+<p> Description=Borg Backup
+<p> [Service]
+<p> Type=oneshot
+<p> Environment="BORG_PASSPHRASE=Otus1234"
+<p> Environment=REPO=borg@192.168.56.120:/var/backup/
+<p> Environment=BACKUP_TARGET=/etc
+<p> ExecStart=/bin/borg create \ --stats \ ${REPO}::etc-{now:%%Y-%%m-%%d_%%H:%%M:%%S} ${BACKUP_TARGET}
+<p> ExecStart=/bin/borg check ${REPO}
+<p> ExecStart=/bin/borg prune \
+<p> --keep-daily 90 \
+<p> --keep-monthly 12 \
+<p> --keep-yearly 1 \
+<p> ${REPO}
+<p> Создаем таймер  
+<p> [Unit]
+<p> Description=Borg Backup
+<p> [Timer]
+<p> OnUnitActiveSec=5min
+<p> [Install]
+<p> WantedBy=timers.target
+<p> Включил и запустил службу таймера
+<p> systemctl enable borg-backup.timer
+<p> systemctl start borg-backup.timer 
+</ul>  
